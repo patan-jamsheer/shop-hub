@@ -17,18 +17,18 @@ app.secret_key = "supersecretkey123"
 
 # ---------- OLX MAIN DATABASE ----------
 db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="Jamsheer@2006",
-    database="olx_clone"
+    host=os.environ.get("MYSQL_HOST"),
+    user=os.environ.get("MYSQL_USER"),
+    password=os.environ.get("MYSQL_PASSWORD"),
+    database=os.environ.get("MYSQL_DB")
 )
 
 # ---------- CHATBOT DATABASE ----------
 db_chat = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="Jamsheer@2006",
-    database="olx_chatbot"
+    host=os.environ.get("MYSQL_HOST"),
+    user=os.environ.get("MYSQL_USER"),
+    password=os.environ.get("MYSQL_PASSWORD"),
+    database=os.environ.get("MYSQL_DB")
 )
 
 # ---------- Auth Page ----------
