@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ product.name }} - ShopHub</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f1f3f6;
+      color: #212121;
+      line-height: 1.6;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, #2874f0 0%, #1557bf 100%);
+      color: white;
+      padding: 16px 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .brand-logo {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .breadcrumb {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .breadcrumb a {
+      color: white;
+      text-decoration: none;
+      transition: opacity 0.3s;
+    }
+
+    .breadcrumb a:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+
+    /* CONTAINER */
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    /* PRODUCT SECTION */
+    .product-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      padding: 40px;
+    }
+
+    /* IMAGE SECTION */
+    .image-section {
+      position: sticky;
+      top: 100px;
+      height: fit-content;
+    }
+
+    .main-image {
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .main-image:hover {
+      transform: scale(1.02);
+    }
+
+    .image-placeholder {
+      width: 100%;
+      height: 400px;
+      background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      color: #b0b0b0;
+    }
+
+    /* DETAILS SECTION */
+    .details-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    h2 {
+      font-size: 28px;
+      font-weight: 600;
+      color: #212121;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .category-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #2874f0 0%, #1557bf 100%);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+
+    .price-section {
+      background: #fafafa;
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 4px solid #388e3c;
+      margin: 15px 0;
+    }
+
+    .price {
+      font-size: 32px;
+      font-weight: 700;
+      color: #212121;
+      margin-bottom: 5px;
+    }
+
+    .price-label {
+      font-size: 13px;
+      color: #878787;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .description {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      color: #212121;
+      font-size: 15px;
+      line-height: 1.7;
+      margin: 15px 0;
+    }
+
+    .description-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #212121;
+      margin-bottom: 12px;
+    }
+
+    /* SELLER SECTION */
+    .seller {
+      background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+      padding: 25px;
+      border-radius: 12px;
+      border: 2px solid #ffc107;
+      margin-top: 20px;
+    }
+
+    .seller h3 {
+      color: #212121;
+      font-size: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .seller h3::before {
+      content: "👤";
+      font-size: 24px;
+    }
+
+    .seller-info {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .seller-info-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .seller-info-item .label {
+      font-weight: 600;
+      color: #212121;
+      min-width: 80px;
+    }
+
+    .seller-info-item .value {
+      color: #424242;
+    }
+
+    /* BUTTONS */
+    button {
+      background: linear-gradient(135deg, #25D366 0%, #20ba5a 100%);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      width: 100%;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+      background: linear-gradient(135deg, #20ba5a 0%, #1da851 100%);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .back-btn {
+      background: linear-gradient(135deg, #2874f0 0%, #1557bf 100%);
+      color: white;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(40, 116, 240, 0.3);
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(40, 116, 240, 0.4);
+    }
+
+    /* SIMILAR PRODUCTS */
+    .similar {
+      background: #f8f9fa;
+      padding: 40px;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .similar h3 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #212121;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    .similar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .similar-card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .similar-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .similar img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .similar-card p:first-of-type {
+      font-weight: 600;
+      color: #212121;
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .similar-card p:last-of-type {
+      font-size: 18px;
+      font-weight: 700;
+      color: #388e3c;
+    }
+
+    /* DIVIDER */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+      margin: 30px 0;
+    }
+
+    /* INFO CARDS */
+    .info-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .info-card {
+      background: white;
+      border: 2px solid #f0f0f0;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+      border-color: #2874f0;
+      transform: translateY(-2px);
+    }
+
+    .info-card-icon {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .info-card-title {
+      font-size: 12px;
+      color: #878787;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .info-card-value {
+      font-size: 14px;
+      color: #212121;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 968px) {
+      .product-section {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 30px 20px;
+      }
+
+      .image-section {
+        position: static;
+      }
+
+      h2 {
+        font-size: 24px;
+      }
+
+      .price {
+        font-size: 28px;
+      }
+
+      .similar-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+    }
+
+    @media (max-width: 600px) {
+      .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .product-section {
+        padding: 20px 15px;
+      }
+
+      .similar {
+        padding: 30px 15px;
+      }
+
+      .info-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .container {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* TRUST BADGES */
+    .trust-badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 15px 0;
+    }
+
+    .trust-badge {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-content">
+    <div class="brand-logo">🛒 ShopHub</div>
+    <div class="breadcrumb">
+      <a href="/main">Home</a> / <span>{{ product.name }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="product-section">
+    <!-- IMAGE SECTION -->
+    <div class="image-section">
+      {% if product.image %}
+        <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" class="main-image">
+      {% else %}
+        <div class="image-placeholder">📦</div>
+      {% endif %}
+      
+      <div class="trust-badges">
+        <div class="trust-badge">✓ Verified Seller</div>
+        <div class="trust-badge">🔒 Secure Chat</div>
+      </div>
+    </div>
+
+    <!-- DETAILS SECTION -->
+    <div class="details-section">
+      <div>
+        <span class="category-badge">{{ product.category }}</span>
+        <h2>{{ product.name }}</h2>
+      </div>
+
+      <div class="price-section">
+        <div class="price-label">Special Price</div>
+        <div class="price">₹{{ product.price }}</div>
+      </div>
+
+      <div class="info-cards">
+        <div class="info-card">
+          <div class="info-card-icon">📦</div>
+          <div class="info-card-title">Category</div>
+          <div class="info-card-value">{{ product.category }}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">📍</div>
+          <div class="info-card-title">Location</div>
+          <div class="info-card-value">{{ product.city }}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">💬</div>
+          <div class="info-card-title">Contact</div>
+          <div class="info-card-value">WhatsApp</div>
+        </div>
+      </div>
+
+      {% if product.description %}
+      <div class="description">
+        <div class="description-title">📝 Product Description</div>
+        {{ product.description }}
+      </div>
+      {% endif %}
+
+      <div class="divider"></div>
+
+      <div class="seller">
+        <h3>Seller Information</h3>
+        <div class="seller-info">
+          <div class="seller-info-item">
+            <span class="label">Name:</span>
+            <span class="value">{{ product.seller_name }}</span>
+          </div>
+          <div class="seller-info-item">
+            <span class="label">Phone:</span>
+            <span class="value">{{ product.seller_phone[-4:] | replace(product.seller_phone[:-4], '*****') }}</span>
+          </div>
+          <div class="seller-info-item">
+            <span class="label">Location:</span>
+            <span class="value">{{ product.city }}, {{ product.state }}, {{ product.country }}</span>
+          </div>
+        </div>
+        <button onclick="chatSeller('{{ product.seller_phone }}','{{ product.name }}','{{ product.seller_name }}')">
+          💬 Chat on WhatsApp
+        </button>
+      </div>
+
+      <a href="/main" class="back-btn">⬅ Back to Browse</a>
+    </div>
+  </div>
+
+  {% if similar %}
+  <div class="similar">
+    <h3>🔥 Similar Products You May Like</h3>
+    <div class="similar-grid">
+      {% for s in similar %}
+        <a href="/product/{{ s.id }}" class="similar-card">
+          <img src="/static/images/{{ s.image }}" alt="{{ s.name }}">
+          <p>{{ s.name }}</p>
+          <p>₹{{ s.price }}</p>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function chatSeller(phone, product, seller){
+    if(confirm(`Chat with ${seller} about "${product}"?`)){
+        const msg = encodeURIComponent(`Hi ${seller}, I'm interested in your product "${product}".`);
+        window.open(`https://wa.me/91${phone}?text=${msg}`, "_blank");
+    }
+}
+</script>
+
+</body>
+</html>

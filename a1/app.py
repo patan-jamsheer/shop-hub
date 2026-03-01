@@ -1,0 +1,296 @@
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+import mysql.connector
+import hashlib
+
+app = Flask(__name__)
+app.secret_key = "supersecretkey123"
+
+# ---------- OLX MAIN DATABASE ----------
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="Jamsheer@2006",
+    database="olx_clone"
+)
+
+# ---------- CHATBOT DATABASE ----------
+db_chat = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="Jamsheer@2006",
+    database="olx_chatbot"
+)
+
+# ---------- Auth Page ----------
+@app.route("/")
+def auth_page():
+    return render_template("auth.html")
+
+
+# ---------- Main Page ----------
+@app.route("/main")
+def main_page():
+    if "user_id" not in session:
+        return redirect(url_for("auth_page"))
+    user_name = session.get("user_name")
+    return render_template("main.html", user_name=user_name)
+
+# ---------- Signup API ----------
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.get_json(force=True)
+    name = data.get("name")
+    email = data.get("email")
+    phone = data.get("phone")
+    password_raw = data.get("password")
+    city = data.get("city")
+    state = data.get("state")
+    country = data.get("country")
+    address = data.get("address")
+
+    if not all([name, email, phone, password_raw]):
+        return jsonify({"message": "All fields required"}), 400
+
+    password = hashlib.sha256(password_raw.encode()).hexdigest()
+    cur = db.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO users (name,email,phone,password,city,state,country,address)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (name,email,phone,password,city,state,country,address))
+        db.commit()
+        return jsonify({"message": "Account created successfully!"}), 200
+    except mysql.connector.errors.IntegrityError:
+        return jsonify({"message": "Email already exists"}), 409
+
+# ---------- Login API ----------
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json(force=True)
+    email = data.get("email")
+    password_raw = data.get("password")
+
+    if not all([email, password_raw]):
+        return jsonify({"message": "All fields required"}), 400
+
+    password = hashlib.sha256(password_raw.encode()).hexdigest()
+    cur = db.cursor()
+    cur.execute("SELECT id,name FROM users WHERE email=%s AND password=%s", (email,password))
+    user = cur.fetchone()
+
+    if user:
+        session["user_id"] = user[0]
+        session["user_name"] = user[1]
+        return jsonify({"message": "Login successful", "redirect": "/main"}), 200
+    else:
+        return jsonify({"message": "Invalid email or password"}), 401
+
+# ---------- Logout ----------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("auth_page"))
+
+# ---------- Chatbot API ----------
+@app.route("/chatbot", methods=["POST"])
+def chatbot():
+    data = request.get_json(force=True)
+    message = data.get("message", "").lower()
+
+    cur = db_chat.cursor(dictionary=True)
+    cur.execute("SELECT keyword,response FROM chatbot_responses")
+    responses = cur.fetchall()
+
+    response = "Sorry, I didn't understand that. Ask about buying or selling products."
+
+    for r in responses:
+        if r['keyword'].lower() in message:
+            response = r['response']
+            break
+
+    return jsonify({"response": response})
+import os
+from werkzeug.utils import secure_filename
+
+# ---------- Config ----------
+UPLOAD_FOLDER = "static/images"
+ALLOWED_EXTENSIONS = {"png","jpg","jpeg","gif"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXTENSIONS
+
+# ---------- Post Product API ----------
+@app.route("/post_product", methods=["POST"])
+def post_product():
+    if "user_id" not in session:
+        return jsonify({"message":"Login required"}), 401
+
+    name = request.form.get("name")
+    category = request.form.get("category")
+    price = request.form.get("price")
+    description = request.form.get("description")
+    image_file = request.files.get("image")  # image must be sent as multipart
+
+    if not all([name, category, price]):
+        return jsonify({"message":"Name, category, and price are required"}), 400
+
+    image_filename = None
+    if image_file and image_file.filename != "":
+        from werkzeug.utils import secure_filename
+        import os
+        UPLOAD_FOLDER = "static/images"
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        filename = secure_filename(image_file.filename)
+        image_file.save(os.path.join(UPLOAD_FOLDER, filename))
+        image_filename = filename
+
+    cur = db.cursor()
+    cur.execute(
+        "INSERT INTO products (name, category, price, description, image, seller_id) VALUES (%s,%s,%s,%s,%s,%s)",
+        (name, category, price, description, image_filename, session["user_id"])
+    )
+    db.commit()
+
+    return jsonify({"message":"Product posted successfully!"}), 200
+
+@app.route("/post_product_page")
+def post_product_page():
+    if "user_id" not in session:
+        return redirect(url_for("auth_page"))
+    return render_template("post_product.html")
+# ---------- Get Products API ----------
+@app.route("/get_products")
+def get_products():
+    cur = db.cursor(dictionary=True)
+    cur.execute("""
+        SELECT 
+            p.id, p.name, p.category, p.price, p.image,
+            u.id AS seller_id,
+            u.name AS seller_name,
+            u.phone AS seller_phone,
+            u.city, u.state
+        FROM products p
+        JOIN users u ON p.seller_id = u.id
+        ORDER BY p.id DESC
+    """)
+    products = cur.fetchall()
+
+    for p in products:
+        p["price"] = float(p["price"])
+
+    return jsonify(products)
+
+
+@app.route("/seller/<int:seller_id>")
+def seller_profile(seller_id):
+    cur = db.cursor(dictionary=True)
+
+    # Seller details
+    cur.execute("""
+        SELECT name, phone, city, state, country
+        FROM users WHERE id=%s
+    """, (seller_id,))
+    seller = cur.fetchone()
+
+    # Seller products
+    cur.execute("""
+        SELECT id, name, price, image
+        FROM products
+        WHERE seller_id=%s
+        ORDER BY id DESC
+    """, (seller_id,))
+    products = cur.fetchall()
+
+    return render_template(
+        "seller_profile.html",
+        seller=seller,
+        products=products
+    )
+
+@app.route("/product/<int:product_id>")
+def product_details(product_id):
+    cur = db.cursor(dictionary=True)
+    
+    # Get product + seller info
+    cur.execute("""
+        SELECT p.id, p.name, p.category, p.price, p.description, p.image,
+               u.id AS seller_id, u.name AS seller_name, u.phone AS seller_phone,
+               u.city, u.state, u.country
+        FROM products p
+        JOIN users u ON p.seller_id = u.id
+        WHERE p.id = %s
+    """, (product_id,))
+    
+    product = cur.fetchone()
+    if not product:
+        return "Product not found", 404
+    
+    # Optional: fetch similar products (same category, excluding this one)
+    cur.execute("""
+        SELECT id, name, price, image 
+        FROM products 
+        WHERE category=%s AND id!=%s 
+        ORDER BY id DESC LIMIT 4
+    """, (product["category"], product_id))
+    similar = cur.fetchall()
+    
+    return render_template("product_details.html", product=product, similar=similar)
+@app.route("/add_to_cart", methods=["POST"])
+def add_to_cart():
+    if "user_id" not in session:
+        return jsonify({"message": "Login required"}), 401
+
+    data = request.get_json()
+    product_id = data.get("product_id")
+    quantity = data.get("quantity", 1)
+
+    cur = db.cursor()
+    try:
+        cur.execute(
+            "INSERT INTO cart (user_id, product_id, quantity) VALUES (%s,%s,%s) "
+            "ON DUPLICATE KEY UPDATE quantity=quantity+%s",
+            (session["user_id"], product_id, quantity, quantity)
+        )
+        db.commit()
+        return jsonify({"message": "Added to cart successfully"}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"message": "Error adding to cart"}), 500
+@app.route("/get_cart")
+def get_cart():
+    if "user_id" not in session:
+        return jsonify([])
+
+    cur = db.cursor(dictionary=True)
+    cur.execute("""
+        SELECT c.id AS cart_id, c.quantity, p.id AS product_id, p.name, p.price, p.image
+        FROM cart c
+        JOIN products p ON c.product_id = p.id
+        WHERE c.user_id=%s
+    """, (session["user_id"],))
+    items = cur.fetchall()
+    for i in items:
+        i["price"] = float(i["price"])
+    return jsonify(items)
+@app.route("/remove_from_cart", methods=["POST"])
+def remove_from_cart():
+    if "user_id" not in session:
+        return jsonify({"message":"Login required"}), 401
+
+    data = request.get_json()
+    cart_id = data.get("cart_id")
+    cur = db.cursor()
+    cur.execute("DELETE FROM cart WHERE id=%s AND user_id=%s", (cart_id, session["user_id"]))
+    db.commit()
+    return jsonify({"message":"Removed from cart"})
+# ---------- Cart Page ----------
+@app.route("/cart_page")
+def cart_page():
+    if "user_id" not in session:
+        return redirect(url_for("auth_page"))
+    return render_template("cart.html")  # We'll create cart.html next
+
+# ---------- Run ----------
+if __name__ == "__main__":
+    app.run(debug=True)
