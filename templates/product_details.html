@@ -480,7 +480,7 @@
     <!-- IMAGE SECTION -->
     <div class="image-section">
       {% if product.image %}
-        <img src="/static/images/{{ product.image }}" alt="{{ product.name }}" class="main-image">
+        <img src="{{ product.image if product.image.startswith('http') else '/static/images/' + product.image }}" alt="{{ product.name }}" class="main-image">
       {% else %}
         <div class="image-placeholder">📦</div>
       {% endif %}
@@ -561,7 +561,7 @@
     <div class="similar-grid">
       {% for s in similar %}
         <a href="/product/{{ s.id }}" class="similar-card">
-          <img src="/static/images/{{ s.image }}" alt="{{ s.name }}">
+          <img src="{{ s.image if s.image.startswith('http') else '/static/images/' + s.image }}" alt="{{ s.name }}">
           <p>{{ s.name }}</p>
           <p>₹{{ s.price }}</p>
         </a>
