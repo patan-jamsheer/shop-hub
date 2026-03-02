@@ -768,7 +768,7 @@ async function loadProducts() {
 
         div.innerHTML = `
 <a href="/product/${p.id}" style="text-decoration:none; color:inherit;">
-${p.image ? `<img src="/static/images/${p.image}">` : ""}
+${p.image ? `<img src="${p.image.startsWith('http') ? p.image : '/static/images/' + p.image}">` : ""}
 <h3>${p.name}</h3>
 </a>
 <p><b>₹${p.price}</b></p>
