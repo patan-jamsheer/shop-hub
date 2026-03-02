@@ -109,12 +109,9 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("auth_page"))
-import ollama
+from google import genai
 
-# ---------- Chatbot API ----------
-import google.generativeai as genai
-
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # ---------- Chatbot API ----------
 @app.route("/chatbot", methods=["POST"])
@@ -126,11 +123,9 @@ def chatbot():
         return jsonify({"response": "🤖 Please type something!"})
 
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content(
-            f"You are ShopHub AI assistant. Patan Jamsheer is the owner of ShopHub. "
-            f"Help users with buying, selling, products, cart, and general questions. "
-            f"Be friendly and concise.\n\nUser: {user_msg}"
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=f"You are ShopHub AI assistant. Patan Jamsheer is the owner of ShopHub. Help users with buying, selling, products, cart, and general questions. Be friendly and concise.\n\nUser: {user_msg}"
         )
         return jsonify({"response": response.text})
 
