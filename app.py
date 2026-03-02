@@ -173,14 +173,9 @@ def post_product():
         return jsonify({"message":"Name, category, and price are required"}), 400
 
     image_filename = None
-    if image_file and image_file.filename != "":
-        from werkzeug.utils import secure_filename
-        import os
-        UPLOAD_FOLDER = "static/images"
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        filename = secure_filename(image_file.filename)
-        image_file.save(os.path.join(UPLOAD_FOLDER, filename))
-        image_filename = filename
+if image_file and image_file.filename != "":
+    result = cloudinary.uploader.upload(image_file)
+    image_filename = result["secure_url"]
 
     cur = db.cursor()
     cur.execute(
