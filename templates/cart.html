@@ -579,7 +579,7 @@ async function loadCart(){
     <div>
         <a href="/product/${i.product_id}" style="display:flex; gap:15px; align-items:center; text-decoration:none; color:inherit;">
             <div class="cart-image-container">
-                <img src="/static/images/${i.image}" alt="${i.name}">
+                <img src="${i.image.startsWith('http') ? i.image : '/static/images/' + i.image}" alt="${i.name}">
             </div>
             <div class="cart-item-details">
                 <p><b>${i.name}</b></p>
