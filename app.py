@@ -158,6 +158,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXTENSIONS
 
 # ---------- Post Product API ----------
+# ---------- Post Product API ----------
 @app.route("/post_product", methods=["POST"])
 def post_product():
     if "user_id" not in session:
@@ -167,26 +168,24 @@ def post_product():
     category = request.form.get("category")
     price = request.form.get("price")
     description = request.form.get("description")
-    image_file = request.files.get("image")  # image must be sent as multipart
+    image_file = request.files.get("image")
 
     if not all([name, category, price]):
         return jsonify({"message":"Name, category, and price are required"}), 400
 
     image_filename = None
-if image_file and image_file.filename != "":
-    result = cloudinary.uploader.upload(image_file)
-    image_filename = result["secure_url"]
+    if image_file and image_file.filename != "":
+        result = cloudinary.uploader.upload(image_file)
+        image_filename = result["secure_url"]
 
     cur = db.cursor()
     cur.execute(
-    "INSERT INTO products (name, category, price, description, image, seller_id) VALUES (%s,%s,%s,%s,%s,%s)",
-    (name, category, price, description, image_filename, session["user_id"])
-)
-
+        "INSERT INTO products (name, category, price, description, image, seller_id) VALUES (%s,%s,%s,%s,%s,%s)",
+        (name, category, price, description, image_filename, session["user_id"])
+    )
     db.commit()
 
     return jsonify({"message":"Product posted successfully!"}), 200
-
 @app.route("/post_product_page")
 def post_product_page():
     if "user_id" not in session:
