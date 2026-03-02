@@ -112,6 +112,11 @@ def logout():
 import ollama
 
 # ---------- Chatbot API ----------
+import google.generativeai as genai
+
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+
+# ---------- Chatbot API ----------
 @app.route("/chatbot", methods=["POST"])
 def chatbot():
     data = request.get_json(force=True)
@@ -121,31 +126,16 @@ def chatbot():
         return jsonify({"response": "🤖 Please type something!"})
 
     try:
-        response = ollama.chat(
-            model="phi3:mini",   # fast model
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are ShopHub AI assistant. "
-                        "patan jamsheer is the owner of shophub"
-                        "Help users with buying, selling, products, cart, and general questions. "
-                        "Be friendly and concise."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": user_msg
-                }
-            ]
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(
+            f"You are ShopHub AI assistant. Patan Jamsheer is the owner of ShopHub. "
+            f"Help users with buying, selling, products, cart, and general questions. "
+            f"Be friendly and concise.\n\nUser: {user_msg}"
         )
-
-        reply = response["message"]["content"].strip()
-        return jsonify({"response": reply})
+        return jsonify({"response": response.text})
 
     except Exception as e:
         return jsonify({"response": f"🤖 AI Error: {str(e)}"})
-
 import os
 from werkzeug.utils import secure_filename
 
